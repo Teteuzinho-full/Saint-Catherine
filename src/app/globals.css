@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: #F8F5F0;
+  color: #0F2747;
+}
+
+::selection {
+  background-color: #D4AF37;
+  color: #0F2747;
+}
+
+/* Scrollbar refinada */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: #F8F5F0;
+}
+::-webkit-scrollbar-thumb {
+  background: #0F2747;
+  border-radius: 999px;
+}
+
+.text-shimmer {
+  background: linear-gradient(90deg, #D4AF37 0%, #F4E5A1 25%, #D4AF37 50%, #F4E5A1 75%, #D4AF37 100%);
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shimmer 4s linear infinite;
+}
+
+.ornament-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+}
+.ornament-divider::before,
+.ornament-divider::after {
+  content: "";
+  height: 1px;
+  width: 48px;
+  background: linear-gradient(90deg, transparent, #D4AF37);
+}
+.ornament-divider::after {
+  background: linear-gradient(90deg, #D4AF37, transparent);
+}
+
+.swiper-pagination-bullet {
+  background: #D4AF37 !important;
+  opacity: 0.5;
+}
+.swiper-pagination-bullet-active {
+  opacity: 1 !important;
+}
