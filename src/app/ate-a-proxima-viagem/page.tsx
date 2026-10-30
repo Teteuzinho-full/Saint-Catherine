@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
+import { DeclinedConsentActions } from "@/components/DeclinedConsentActions";
 
 export const metadata: Metadata = {
   title: "Até a Próxima Viagem",
@@ -27,12 +27,7 @@ export default function AteAProximaViagemPage() {
         <p className="mt-4 text-sc-offwhite/60 max-w-md mx-auto leading-relaxed">
           Devido ao não aceite dos nossos termos, nos encontraremos em outra viagem.
         </p>
-        <Link
-          href="/"
-          className="mt-10 inline-block px-8 py-3 border border-sc-gold/50 text-sc-gold text-sm uppercase tracking-widest2 hover:bg-sc-gold hover:text-sc-blue transition-colors"
-        >
-          Voltar ao início
-        </Link>
+        <DeclinedConsentActions />
       </div>
     </div>
   );

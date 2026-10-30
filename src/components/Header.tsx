@@ -25,6 +25,13 @@ export function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  useEffect(() => {
+    document.body.style.overflow = open ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
@@ -80,10 +87,14 @@ export function Header() {
       <AnimatePresence>
         {open && (
           <motion.div
-            className="fixed inset-0 z-[60] bg-sc-blue lg:hidden"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
+            className="fixed inset-y-0 right-0 z-[60] flex w-[min(88vw,24rem)] flex-col overflow-y-auto border-l border-sc-gold/25 bg-sc-blue/90 shadow-[-20px_0_50px_rgba(15,39,71,0.35)] backdrop-blur-md lg:hidden"
+            initial={{ x: "100%", opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: "100%", opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeOut" }}
+            role="dialog"
+            aria-modal="true"
+            aria-label="Menu de navegação"
           >
             <div className="flex justify-between items-center px-5 py-4 border-b border-sc-gold/20">
               <span className="font-display text-xl tracking-widest2 text-sc-offwhite">
@@ -95,7 +106,7 @@ export function Header() {
                 </svg>
               </button>
             </div>
-            <motion.nav className="flex flex-col items-center justify-center gap-8 py-16">
+            <motion.nav className="flex flex-1 flex-col items-center justify-center gap-7 px-5 py-10">
               {links.map((l, i) => (
                 <motion.div
                   key={l.href}

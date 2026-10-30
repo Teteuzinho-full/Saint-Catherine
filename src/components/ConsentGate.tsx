@@ -41,11 +41,16 @@ export function ConsentGate({ children }: { children: React.ReactNode }) {
   function recusar() {
     window.localStorage.setItem(CONSENT_KEY, "declined");
     setStatus("declined");
-    router.push("/ate-a-proxima-viagem");
+    router.replace("/ate-a-proxima-viagem");
   }
 
   // Páginas legais permanecem acessíveis mesmo sem consentimento, para transparência.
   const paginaLivre = pathname?.startsWith("/politica-") || pathname?.startsWith("/termos-") || pathname?.startsWith("/direitos-") || pathname?.startsWith("/exclusao-") || pathname?.startsWith("/consentimento-") || pathname === "/ate-a-proxima-viagem";
+  const acessoBloqueado = status === "declined" && !paginaLivre;
+
+  useEffect(() => {
+    if (acessoBloqueado) router.replace("/ate-a-proxima-viagem");
+  }, [acessoBloqueado, router]);
 
   if (status === "loading") {
     return <div className="min-h-screen bg-sc-offwhite" />;
@@ -53,7 +58,7 @@ export function ConsentGate({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      {children}
+      {!acessoBloqueado && children}
       <AnimatePresence>
         {status === "pending" && !paginaLivre && (
           <motion.div
