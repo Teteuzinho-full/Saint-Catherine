@@ -1,9 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useId, useState } from "react";
+import { createPortal } from "react-dom";
 import Image from "next/image";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 
 const links = [
   { href: "/#inicio", label: "Início" },
@@ -17,125 +18,77 @@ const links = [
 export function Header() {
   const [scrolled, setScrolled] = useState(false);
   const [open, setOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  const menuId = useId();
 
   useEffect(() => {
+    setMounted(true);
     const onScroll = () => setScrolled(window.scrollY > 24);
     onScroll();
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
   useEffect(() => {
-    document.body.style.overflow = open ? "hidden" : "";
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = "";
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", onKeyDown);
     };
   }, [open]);
 
-  return (
-    <header
-      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-        scrolled
-          ? "bg-sc-blue/95 backdrop-blur-sm shadow-premium py-2"
-          : "bg-gradient-to-b from-sc-blue/70 to-transparent py-4"
-      }`}
-    >
-      <div className="mx-auto max-w-7xl px-5 sm:px-8 flex items-center justify-between">
-        <Link href="/#inicio" className="flex items-center gap-3 group">
-          <Image
-            src="/assets/menu.webp"
-            alt="Brasão Saint Catherine"
-            width={48}
-            height={48}
-            className="h-11 w-11 sm:h-12 sm:w-12 object-contain drop-shadow-[0_2px_6px_rgba(212,175,55,0.5)] transition-transform duration-500 group-hover:scale-105"
-            priority
-          />
-          <span className="font-display text-xl sm:text-2xl tracking-widest2 text-sc-offwhite">
-            SAINT CATHERINE
-          </span>
-        </Link>
-
-        <nav className="hidden lg:flex items-center gap-8">
-          {links.map((l) => (
-            <Link
-              key={l.href}
-              href={l.href}
-              className="text-sm uppercase tracking-widest2 text-sc-offwhite/85 hover:text-sc-gold transition-colors duration-300"
-            >
-              {l.label}
-            </Link>
-          ))}
-          <Link
-            href="/checkout"
-            className="px-6 py-2.5 border border-sc-gold text-sc-gold text-sm uppercase tracking-widest2 hover:bg-sc-gold hover:text-sc-blue transition-colors duration-300"
-          >
-            Comprar
-          </Link>
-        </nav>
-
-        <button
-          aria-label="Abrir menu"
-          className="lg:hidden text-sc-offwhite p-2"
-          onClick={() => setOpen(true)}
-        >
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
-            <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-          </svg>
-        </button>
-      </div>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            className="fixed inset-y-0 right-0 z-[60] flex w-[min(88vw,24rem)] flex-col overflow-y-auto border-l border-sc-gold/25 bg-sc-blue/90 shadow-[-20px_0_50px_rgba(15,39,71,0.35)] backdrop-blur-md lg:hidden"
-            initial={{ x: "100%", opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            exit={{ x: "100%", opacity: 0 }}
-            transition={{ duration: 0.3, ease: "easeOut" }}
-            role="dialog"
-            aria-modal="true"
-            aria-label="Menu de navegação"
-          >
-            <div className="flex justify-between items-center px-5 py-4 border-b border-sc-gold/20">
-              <span className="font-display text-xl tracking-widest2 text-sc-offwhite">
-                SAINT CATHERINE
-              </span>
-              <button aria-label="Fechar menu" onClick={() => setOpen(false)} className="text-sc-offwhite p-2">
-                <svg width="26" height="26" viewBox="0 0 24 24" fill="none">
-                  <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
-                </svg>
+  const mobileMenu = (
+    <AnimatePresence>
+      {open && (
+        <motion.div className="fixed inset-0 z-[100] lg:hidden" initial="hidden" animate="visible" exit="hidden">
+          <motion.button type="button" aria-label="Fechar menu" className="absolute inset-0 cursor-default bg-sc-blue/55 backdrop-blur-[2px]" variants={{ hidden: { opacity: 0 }, visible: { opacity: 1 } }} transition={{ duration: 0.22 }} onClick={() => setOpen(false)} />
+          <motion.aside id={menuId} className="absolute inset-y-0 right-0 flex w-[min(88vw,25rem)] flex-col overflow-y-auto border-l border-sc-gold/30 bg-sc-blue text-sc-offwhite shadow-[-24px_0_60px_rgba(0,0,0,0.28)]" variants={{ hidden: { x: "100%" }, visible: { x: 0 } }} transition={{ type: "tween", duration: 0.32, ease: [0.22, 1, 0.36, 1] }} role="dialog" aria-modal="true" aria-label="Menu de navegação">
+            <div className="flex items-center justify-between border-b border-sc-gold/20 px-6 py-5">
+              <span className="font-display text-xl tracking-widest2">SAINT CATHERINE</span>
+              <button type="button" aria-label="Fechar menu" onClick={() => setOpen(false)} className="grid h-11 w-11 place-items-center border border-sc-gold/30 text-sc-offwhite transition-colors hover:border-sc-gold hover:bg-sc-gold hover:text-sc-blue focus:outline-none focus:ring-2 focus:ring-sc-gold">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" /></svg>
               </button>
             </div>
-            <motion.nav className="flex flex-1 flex-col items-center justify-center gap-7 px-5 py-10">
-              {links.map((l, i) => (
-                <motion.div
-                  key={l.href}
-                  initial={{ opacity: 0, y: 16 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.06 * i, duration: 0.4 }}
-                >
-                  <Link
-                    href={l.href}
-                    onClick={() => setOpen(false)}
-                    className="font-display text-2xl tracking-wide text-sc-offwhite hover:text-sc-gold transition-colors"
-                  >
-                    {l.label}
-                  </Link>
+            <nav className="flex flex-1 flex-col justify-center gap-1 px-6 py-10" aria-label="Navegação principal">
+              {links.map((link, index) => (
+                <motion.div key={link.href} initial={{ opacity: 0, x: 18 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.08 + index * 0.045, duration: 0.28 }}>
+                  <Link href={link.href} onClick={() => setOpen(false)} className="block border-b border-sc-offwhite/10 py-4 font-display text-3xl text-sc-offwhite transition-colors hover:text-sc-gold focus:outline-none focus:text-sc-gold">{link.label}</Link>
                 </motion.div>
               ))}
-              <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
-                <Link
-                  href="/checkout"
-                  onClick={() => setOpen(false)}
-                  className="mt-4 inline-block px-8 py-3 border border-sc-gold text-sc-gold uppercase tracking-widest2 text-sm hover:bg-sc-gold hover:text-sc-blue transition-colors"
-                >
-                  Comprar
-                </Link>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.42 }}>
+                <Link href="/checkout" onClick={() => setOpen(false)} className="mt-8 block border border-sc-gold bg-sc-gold px-6 py-4 text-center text-sm font-semibold uppercase tracking-widest2 text-sc-blue transition-colors hover:bg-transparent hover:text-sc-gold">Comprar passaporte</Link>
               </motion.div>
-            </motion.nav>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </header>
+            </nav>
+          </motion.aside>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+
+  return (
+    <>
+      <header className={`fixed inset-x-0 top-0 z-50 transition-all duration-500 ${scrolled ? "bg-sc-blue/95 py-2 shadow-premium backdrop-blur-sm" : "bg-gradient-to-b from-sc-blue/70 to-transparent py-4"}`}>
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-5 sm:px-8">
+          <Link href="/#inicio" className="group flex items-center gap-3" aria-label="Saint Catherine — início">
+            <Image src="/assets/menu.webp" alt="Brasão Saint Catherine" width={48} height={48} className="h-11 w-11 object-contain drop-shadow-[0_2px_6px_rgba(212,175,55,0.5)] transition-transform duration-500 group-hover:scale-105 sm:h-12 sm:w-12" priority />
+            <span className="font-display text-xl tracking-widest2 text-sc-offwhite sm:text-2xl">SAINT CATHERINE</span>
+          </Link>
+          <nav className="hidden items-center gap-8 lg:flex" aria-label="Navegação principal">
+            {links.map((link) => <Link key={link.href} href={link.href} className="text-sm uppercase tracking-widest2 text-sc-offwhite/85 transition-colors hover:text-sc-gold">{link.label}</Link>)}
+            <Link href="/checkout" className="border border-sc-gold px-6 py-2.5 text-sm uppercase tracking-widest2 text-sc-gold transition-colors hover:bg-sc-gold hover:text-sc-blue">Comprar</Link>
+          </nav>
+          <button type="button" aria-label="Abrir menu" aria-expanded={open} aria-controls={menuId} className="grid h-11 w-11 place-items-center border border-sc-offwhite/25 text-sc-offwhite transition-colors hover:border-sc-gold hover:text-sc-gold focus:outline-none focus:ring-2 focus:ring-sc-gold lg:hidden" onClick={() => setOpen(true)}>
+            <svg width="25" height="25" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" /></svg>
+          </button>
+        </div>
+      </header>
+      {mounted ? createPortal(mobileMenu, document.body) : null}
+    </>
   );
 }
